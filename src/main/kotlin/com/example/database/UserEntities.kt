@@ -10,6 +10,7 @@ object UserTable: Table<DBUserEntity>("user"){
     val name= varchar("name").bindTo { it.name }
     val email=varchar("email").bindTo { it.email }
     val mobile=varchar("mobile").bindTo { it.mobile }
+    val group=int("group").bindTo { it.group }
 }
 
 interface DBUserEntity: Entity<DBUserEntity>{
@@ -18,4 +19,5 @@ interface DBUserEntity: Entity<DBUserEntity>{
     val name:String
     val email:String
     val mobile:String
+    val group:Int
 }
