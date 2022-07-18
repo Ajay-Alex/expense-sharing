@@ -3,19 +3,17 @@ package com.example.database
 import com.example.database.UserTable.bindTo
 import com.example.database.UserTable.primaryKey
 import org.ktorm.entity.Entity
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.ktorm.schema.*
 
 interface DBAuditEntity: Entity<DBAuditEntity>{
     companion object: Entity.Factory<DBUserEntity>()
-    val toId:Int
-    val fromId:Int
-    var amount:Int
+    val toName:String
+    val fromName:String
+    var amount:Float
 }
 
 object AuditTable: Table<DBAuditEntity>("audit"){
-    val toId = int("toid").bindTo{it.toId }
-    val fromId= int("fromid").bindTo { it.fromId }
-    val amount=int("amount").bindTo { it.amount }
+    val toName = varchar("to").bindTo{it.toName }
+    val fromName= varchar("from").bindTo { it.fromName }
+    val amount=float("amount").bindTo { it.amount }
 }

@@ -2,7 +2,6 @@ package com.example.repository
 
 import com.example.database.DatabaseManager
 import com.example.entities.Audit
-import com.example.entities.CreateGroup
 import com.example.entities.User
 import com.example.entities.UserDraft
 
@@ -15,40 +14,37 @@ class UserRepository {
             ?.let{ User(it.userid,it.name,it.email,it.mobile,it.group) }
     }
 
-    fun createUser(draft: UserDraft): User {
+    fun createUser(draft: UserDraft): User? {
         return database.addUser(draft)
     }
 
 
     fun addAudit(audit: Audit):Audit{
-        //println("Inside addTxn:$audit")
-        val aud=database.getAudit(audit.toId,audit.fromId)
+        val aud=database.getAudit(audit.toName,audit.fromName)
         if(aud == null){
-            //println("******AUDIT NULL******")
             database.addAudit(audit)
             return audit
         }
         else{
             aud.amount+=audit.amount
-            //println("aud:$aud,audit:$audit")
             database.updateAudit(aud)
         }
         return aud
     }
 
-    fun addTxn(userId:Int,amount:Int):Int{
-        val user1=database.getUserById(userId)?:return -1
-        if(user1.group==0)return -2
+    fun addTxn(user:String,amount:Int):Int{
+        val user1=database.getUserByName(user)?:return -1
         val userList=database.getUsersByGroup(user1.group)
-        val split=amount/userList.size
+        val split:Float= amount.toFloat()/(userList.size).toFloat()
         for(i in userList){
-            if(i.userid!=userId){
-                addAudit(Audit(userId,i.userid,split))
+            if(i.name!=user){
+                addAudit(Audit(user,i.name,split))
             }
         }
         return 1
     }
 
+    /*
     fun createGroupById(createGroup: CreateGroup):Int{
 
         val userList= mutableListOf<User>()
@@ -58,11 +54,18 @@ class UserRepository {
             if(user.group!=0) return -2
             userList.add(user)
         }
-        val groupId=createGroup.userIdList[0]
+        val group=database.addGroup(createGroup.grpName)
         for(i in userList){
-            database.updateUser(User(i.userid,i.name,i.email,i.mobile,groupId))
+            database.updateUser(User(i.userid,i.name,i.email,i.mobile,group.grpId))
         }
-        return groupId
+        return group.grpId
+    }
+    */
+
+    fun createGroupByName(grpName:String):Int{
+        val group=database.getGroupByName(grpName)
+        return if(group!=null) 0
+        else database.addGroup(grpName).grpId
     }
 
 }

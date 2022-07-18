@@ -1,7 +1,5 @@
 package com.example.plugins
 
-import com.example.entities.Audit
-import com.example.entities.CreateGroup
 import com.example.entities.UserDraft
 import com.example.repository.UserRepository
 import io.ktor.server.routing.*
@@ -13,10 +11,13 @@ import io.ktor.server.request.*
 fun Application.configureRouting() {
 
     routing {
+
         val repository:UserRepository= UserRepository()
+
         get("/") {
             call.respondText("Hello! Welcome to Expense Sharing App")
         }
+
         get("/user/{id}"){
             val id=call.parameters["id"]?.toIntOrNull()
             if(id==null){
@@ -30,7 +31,7 @@ fun Application.configureRouting() {
             if(user==null){
                 call.respond(
                     HttpStatusCode.NotFound,
-                    "ToDo with id:$id Not Found")
+                    "user with id:$id Not Found")
             }else{
                 call.respond(user)
             }
@@ -39,34 +40,40 @@ fun Application.configureRouting() {
         post("/users"){
             val userDraft= call.receive<UserDraft>()
             val user = repository.createUser(userDraft)
-            call.respond(user)
+            if(user==null){
+                call.respond(
+                    HttpStatusCode.NotFound,
+                    "Group Not Found")
+            }
+            else call.respond(user)
         }
-        post("/addGroup"){
-            val createGroup= call.receive<CreateGroup>()
-            val groupId= repository.createGroupById(createGroup)
-            if(groupId==-2){
+
+        post("/addGroup/{grpName}"){
+            val grpName=call.parameters["grpName"]
+            if(grpName==null){
                 call.respond(
                     HttpStatusCode.BadRequest,
-                    "Multiple groups per user not allowed"
+                    "Group name cannot be null"
                 )
                 return@post
             }
-            if(groupId==-1){
+            val groupId= repository.createGroupByName(grpName)
+            if(groupId==0){
                 call.respond(
-                    HttpStatusCode.NotFound,
-                    "user Not Found"
+                    HttpStatusCode.BadRequest,
+                    "Group already exist"
                 )
             }else{
                 call.respond(HttpStatusCode.OK, "group created with groupId:$groupId")
             }
         }
 
-        post("/addTxn/{userId}/{amount}"){
-            val id=call.parameters["userid"]?.toIntOrNull()
-            if(id==null){
+        post("/addTxn/{userName}/{amount}"){
+            val name=call.parameters["userName"]
+            if(name==null){
                 call.respond(
                     HttpStatusCode.BadRequest,
-                    "Id parameter has to be a number"
+                    "Name parameter has to be a provided"
                 )
                 return@post
             }
@@ -78,18 +85,12 @@ fun Application.configureRouting() {
                 )
                 return@post
             }
-            val res = repository.addTxn(id,amount)
-            if(res==-2){
-                call.respond(
-                    HttpStatusCode.BadRequest,
-                    "user not in any group"
-                )
-                return@post
-            }
+            val res = repository.addTxn(name,amount)
+
             if(res==-1){
                 call.respond(
                     HttpStatusCode.NotFound,
-                    "user with id:$id Not Found"
+                    "user with name :$name Not Found"
                 )
             }else{
                 call.respond(HttpStatusCode.OK)

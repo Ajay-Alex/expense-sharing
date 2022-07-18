@@ -1,6 +1,7 @@
 package com.example.database
 
 import com.example.entities.Audit
+import com.example.entities.GroupEntity
 import com.example.entities.User
 import com.example.entities.UserDraft
 import org.ktorm.database.Database
@@ -31,9 +32,9 @@ class DatabaseManager {
             .firstOrNull{it.userid eq id}
     }
 
-    fun getUserByMobile(mobile:String):DBUserEntity?{
+    fun getUserByName(name:String):DBUserEntity?{
         return ktormDatabase.sequenceOf(UserTable)
-            .firstOrNull{it.mobile eq mobile}
+            .firstOrNull{it.name eq name}
     }
 
     fun getUsersByGroup(group:Int):List<User>{
@@ -53,42 +54,59 @@ class DatabaseManager {
         }
         return userList
     }
-    fun getAudit(toId:Int , fromId:Int): Audit?{
-        println("inside getaudit")
+    fun getAudit(to:String , from:String): Audit?{
+        //println("inside getaudit")
          val query = ktormDatabase.from(AuditTable).select()
-             .where { (AuditTable.toId eq toId) and (AuditTable.fromId eq fromId) }
+             .where { (AuditTable.toName eq to) and (AuditTable.fromName eq from) }
         var audit:Audit? =null
         for(row in query){
             audit = Audit(
-                row[AuditTable.toId]!!,
-                row[AuditTable.fromId]!!,
+                row[AuditTable.toName]!!,
+                row[AuditTable.fromName]!!,
                 row[AuditTable.amount]!!
             )
             break
         }
-        println("inside getaudit after query: $audit")
+        //println("inside getaudit after query: $audit")
 
         return audit
     }
+    fun getGroupByName(name:String):GroupEntity?{
+        return ktormDatabase.sequenceOf(GroupTable)
+            .firstOrNull{it.grpName eq name}
+            ?.let{ GroupEntity(it.grpId,it.grpName)}?: null
+    }
 
-    fun addUser(draft: UserDraft):User{
+    fun addUser(draft: UserDraft):User?{
+        val group=getGroupByName(draft.group)?:return null
         val id= ktormDatabase.insertAndGenerateKey(UserTable){
             set(it.name,draft.name)
             set(it.email,draft.email)
             set(it.mobile ,draft.mobile)
+            set(it.group,group.grpId)
         } as Int
 
-        return User(id,draft.name,draft.email,draft.mobile,null)
+        return User(id,draft.name,draft.email,draft.mobile,group.grpId)
     }
      fun addAudit(audit:Audit){
          println("inside add audit: $audit")
          ktormDatabase.insert(AuditTable){
-             set(it.toId,audit.toId)
-             set(it.fromId,audit.fromId)
+             set(it.toName,audit.toName)
+             set(it.fromName,audit.fromName)
              set(it.amount,audit.amount)
          }
      }
 
+    fun addGroup(grpName:String): GroupEntity{
+
+        val id= ktormDatabase.insertAndGenerateKey(GroupTable){
+            set(it.grpName,grpName)
+        } as Int
+
+        return GroupEntity(id,grpName)
+    }
+
+    /*
     fun updateUser(user: User):Boolean{
         val updatedRows= ktormDatabase.update(UserTable){
             set(it.name,user.name)
@@ -101,14 +119,15 @@ class DatabaseManager {
         }
         return updatedRows>0
     }
+     */
     fun updateAudit(audit: Audit):Boolean{
         println("inside update audit:$audit")
         val updatedRows= ktormDatabase.update(AuditTable){
-            set(it.toId,audit.toId)
-            set(it.fromId,audit.fromId)
+            set(it.toName,audit.toName)
+            set(it.fromName,audit.fromName)
             set(it.amount,audit.amount)
             where{
-                (AuditTable.toId eq audit.toId) and (AuditTable.fromId eq audit.fromId)
+                (AuditTable.toName eq audit.toName) and (AuditTable.fromName eq audit.fromName)
             }
         }
         return updatedRows>0
