@@ -1,4 +1,4 @@
-package com.example.entities
+package entities
 
 data class UserDraft(
     val name:String,

@@ -1,4 +1,4 @@
-package com.example.entities
+package entities
 
 data class Audit(
     val toName: String,

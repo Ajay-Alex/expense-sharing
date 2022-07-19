@@ -1,6 +1,6 @@
-package com.example.database
+package database
 
-import com.example.database.AuditTable.bindTo
+import database.AuditTable.bindTo
 import org.ktorm.entity.Entity
 import org.ktorm.schema.Table
 import org.ktorm.schema.int

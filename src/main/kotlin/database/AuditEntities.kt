@@ -1,7 +1,7 @@
-package com.example.database
+package database
 
-import com.example.database.UserTable.bindTo
-import com.example.database.UserTable.primaryKey
+import database.UserTable.bindTo
+import database.UserTable.primaryKey
 import org.ktorm.entity.Entity
 import org.ktorm.schema.*
 
